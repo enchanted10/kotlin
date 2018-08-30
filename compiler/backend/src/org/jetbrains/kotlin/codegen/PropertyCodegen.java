@@ -392,8 +392,8 @@ public class PropertyCodegen {
             modifiers |= ACC_SYNTHETIC;
         }
 
-        KotlinType kotlinType =
-                isDelegate ? getDelegateTypeForProperty((KtProperty) element, propertyDescriptor) : propertyDescriptor.getType();
+        KotlinType kotlinType = isDelegate ? getDelegateTypeForProperty((KtProperty) element, propertyDescriptor, bindingContext)
+                                           : propertyDescriptor.getType();
         Type type = typeMapper.mapType(kotlinType);
 
         ClassBuilder builder = v;
@@ -432,7 +432,11 @@ public class PropertyCodegen {
     }
 
     @NotNull
-    private KotlinType getDelegateTypeForProperty(@NotNull KtProperty p, @NotNull PropertyDescriptor propertyDescriptor) {
+    public static KotlinType getDelegateTypeForProperty(
+            @NotNull KtProperty p,
+            @NotNull PropertyDescriptor propertyDescriptor,
+            @NotNull BindingContext bindingContext
+    ) {
         KotlinType delegateType = null;
 
         ResolvedCall<FunctionDescriptor> provideDelegateResolvedCall =
