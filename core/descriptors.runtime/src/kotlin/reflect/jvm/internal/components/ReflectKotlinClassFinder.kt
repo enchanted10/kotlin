@@ -18,19 +18,21 @@ package kotlin.reflect.jvm.internal.components
 
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.kotlin.KotlinClassFinder
+import org.jetbrains.kotlin.load.kotlin.KotlinClassFinder.KotlinClassOrClassFileContent
+import org.jetbrains.kotlin.load.kotlin.KotlinClassFinder.KotlinClassOrClassFileContent.KotlinClass
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import java.io.InputStream
 
 class ReflectKotlinClassFinder(private val classLoader: ClassLoader) : KotlinClassFinder {
-    private fun findKotlinClass(fqName: String): KotlinJvmBinaryClass? {
-        return classLoader.tryLoadClass(fqName)?.let { ReflectKotlinClass.create(it) }
+    private fun findKotlinClass(fqName: String): KotlinClassOrClassFileContent? {
+        return classLoader.tryLoadClass(fqName)?.let { ReflectKotlinClass.create(it) }?.let(::KotlinClass)
     }
 
-    override fun findKotlinClass(classId: ClassId) = findKotlinClass(classId.toRuntimeFqName())
+    override fun findKotlinClassOrClassFileContent(classId: ClassId) = findKotlinClass(classId.toRuntimeFqName())
 
-    override fun findKotlinClass(javaClass: JavaClass): KotlinJvmBinaryClass? {
+    override fun findKotlinClassOrClassFileContent(javaClass: JavaClass): KotlinClassOrClassFileContent? {
         // TODO: go through javaClass's class loader
         return findKotlinClass(javaClass.fqName?.asString() ?: return null)
     }

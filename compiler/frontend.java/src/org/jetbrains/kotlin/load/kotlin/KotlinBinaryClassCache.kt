@@ -28,11 +28,14 @@ class KotlinBinaryClassCache : Disposable {
     private class RequestCache {
         internal var virtualFile: VirtualFile? = null
         internal var modificationStamp: Long = 0
-        internal var virtualFileKotlinClass: VirtualFileKotlinClass? = null
+        internal var kotlinClassOrClassFileContent: KotlinClassFinder.KotlinClassOrClassFileContent? = null
 
-        fun cache(file: VirtualFile, aClass: VirtualFileKotlinClass?): VirtualFileKotlinClass? {
+        fun cache(
+            file: VirtualFile,
+            aClass: KotlinClassFinder.KotlinClassOrClassFileContent?
+        ): KotlinClassFinder.KotlinClassOrClassFileContent? {
             virtualFile = file
-            virtualFileKotlinClass = aClass
+            kotlinClassOrClassFileContent = aClass
             modificationStamp = file.modificationStamp
 
             return aClass
@@ -53,7 +56,9 @@ class KotlinBinaryClassCache : Disposable {
     }
 
     companion object {
-        fun getKotlinBinaryClass(file: VirtualFile, fileContent: ByteArray? = null): KotlinJvmBinaryClass? {
+        fun getKotlinBinaryClassOrClassFileContent(
+            file: VirtualFile, fileContent: ByteArray? = null
+        ): KotlinClassFinder.KotlinClassOrClassFileContent? {
             if (file.fileType !== JavaClassFileType.INSTANCE) return null
 
             if (file.name == PsiJavaModule.MODULE_INFO_CLS_FILE) return null
@@ -62,7 +67,7 @@ class KotlinBinaryClassCache : Disposable {
             val requestCache = service.cache.get()
 
             if (file.modificationStamp == requestCache.modificationStamp && file == requestCache.virtualFile) {
-                return requestCache.virtualFileKotlinClass
+                return requestCache.kotlinClassOrClassFileContent
             }
 
             val aClass = ApplicationManager.getApplication().runReadAction(Computable {
